@@ -5,6 +5,7 @@ import "strings"
 import "strconv"
 import "io/ioutil"
 import "time"
+import "os"
 
 // while true; do egrep 'xvda2|sda2' /proc/diskstats|head -1|awk '{print $14}'; sleep 1; done
 
@@ -56,13 +57,23 @@ func count(name string, value uint64) string {
 
 func emitStats(disk string, stats *diskStats) {
 	s := []string{
+		fmt.Sprintf("source=%q", source()),
 		count(fmt.Sprintf("%v.inflight", disk), stats.Inflight),
 		count(fmt.Sprintf("%v.weighted-io-time", disk), stats.WeightedIoTime),
 	}
 	fmt.Println(strings.Join(s, " "))
 }
 
+func source() string {
+	return strings.Join([]string{
+		os.Getenv("APP"),
+		os.Getenv("DEPLOY"),
+		os.Getenv("DYNO"),
+	}, ".")
+}
+
 func main() {
+
 	ticker := time.NewTicker(time.Second * 1)
 	for {
 		select {
