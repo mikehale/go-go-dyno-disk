@@ -54,10 +54,10 @@ func count(name string, value uint64) string {
 	return fmt.Sprintf("count#%v=%v", name, value)
 }
 
-func emitStats(stats *diskStats) {
+func emitStats(disk string, stats *diskStats) {
 	s := []string{
-		count("inflight", stats.Inflight),
-		count("weightediotime", stats.WeightedIoTime),
+		count(fmt.Sprintf("%v.inflight", disk), stats.Inflight),
+		count(fmt.Sprintf("%v.weighted-io-time", disk), stats.WeightedIoTime),
 	}
 	fmt.Println(strings.Join(s, " "))
 }
@@ -71,7 +71,13 @@ func main() {
 			if err != nil {
 				panic(fmt.Sprintf("Could not read %v", DISKSTATS))
 			}
-			emitStats(parseDiskStats(string(data))["sda2"])
+			stats := parseDiskStats(string(data))
+			if stats["sda2"] != nil {
+				emitStats("sda2", stats["sda2"])
+			}
+			if stats["xvda2"] != nil {
+				emitStats("xvda2", stats["xvda2"])
+			}
 		}
 	}
 }
